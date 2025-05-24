@@ -81,7 +81,7 @@ app.post('/sync-inventory', async (req, res) => {
       }
     });
 
-    console.log(`[${source} ➜ ${targetStore}] SKU ${sku} synced to ${quantity}`);
+    console.log(`[${source} ➜ ${targetStore}] SKU ${sku} synced to ${quantity}`);//log the sync operation
     res.status(200).json({ message: 'Inventory synced' });
 
   } catch (error) {
