@@ -38,6 +38,7 @@ function getStoreConfig(store) {
 // Define routes
 app.post('/sync-inventory', async (req, res) => {
   try {
+    console.log("Incoming request body:", req.body); 
     const { sku, quantity, source } = req.body;
 
     if (!sku || quantity === undefined || !source) {
