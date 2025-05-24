@@ -1,14 +1,41 @@
-
+// Load environment variables from .env file
 require('dotenv').config();
+
+// Import necessary modules
 const express = require('express');
 const axios = require('axios');
 
-
+// Initialize Express application
 const app = express();
 app.use(express.json());
 
+// Validate required environment variables
+const requiredEnvVars = ['EZBIKE_SHOP', 'EZBIKE_TOKEN', 'NAMI_SHOP', 'NAMI_TOKEN', 'PORT'];
+requiredEnvVars.forEach((key) => {
+  if (!process.env[key]) {
+    console.error(`Missing required environment variable: ${key}`);
+    process.exit(1); // Exit the application if a required variable is missing
+  }
+});
+
+// Define port and store configurations
 const PORT = process.env.PORT || 3000;
 
+function getStoreConfig(store) {
+  if (store === 'NAMI') {
+    return {
+      store: process.env.NAMI_SHOP,
+      token: process.env.NAMI_TOKEN
+    };
+  } else if (store === 'EZBIKE') {
+    return {
+      store: process.env.EZBIKE_SHOP,
+      token: process.env.EZBIKE_TOKEN
+    };
+  }
+}
+
+// Define routes
 app.post('/sync-inventory', async (req, res) => {
   try {
     const { sku, quantity, source } = req.body;
@@ -26,11 +53,13 @@ app.post('/sync-inventory', async (req, res) => {
 
     let matchedVariant = null;
     for (const product of products.data.products) {
-      matchedVariant = product.variants.find(v => v.sku === sku);
+        product.variants.forEach(v => console.log(`Product: ${product.title}, Variant SKU: ${v.sku}`));
+        matchedVariant = product.variants.find(v => v.sku?.trim().toLowerCase() === sku.trim().toLowerCase());
       if (matchedVariant) break;
     }
 
     if (!matchedVariant) {
+        console.log(`SKU ${sku} NOT found in ${config.store}`);
       return res.status(404).json({ error: `SKU ${sku} not found in ${targetStore}` });
     }
 
@@ -60,23 +89,12 @@ app.post('/sync-inventory', async (req, res) => {
   }
 });
 
-function getStoreConfig(store) {
-  if (store === 'NAMI') {
-    return {
-      store: process.env.NAMI_SHOP,
-      token: process.env.NAMI_TOKEN
-    };
-  } else if (store === 'EZBIKE') {
-    return {
-      store: process.env.EZBIKE_SHOP,
-      token: process.env.EZBIKE_TOKEN
-    };
-  }
-}
-
 // Optional route for browser testing
 app.get('/', (req, res) => {
-    res.send('Inventory Sync Middleware is running');
-  });
+  res.send('Inventory Sync Middleware is running');
+});
 
-app.listen(PORT, () => console.log(`Inventory sync middleware running on port ${PORT}`));
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Inventory sync middleware running on port ${PORT}`);
+});
