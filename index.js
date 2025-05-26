@@ -25,6 +25,7 @@ const stores = {
 };
 
 app.post('/sync-inventory', async (req, res) => {
+   console.log('Received raw body:', req.body);
   try {
     const { sku, quantity, source } = req.body;
     if (!sku || quantity === undefined || !source || !stores[source]) {
